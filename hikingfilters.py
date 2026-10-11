@@ -57,16 +57,16 @@ def filter_hikes (
 # Test the filter_hikes function
 filtered_hikes = filter_hikes(
     hikes,
-    min_distance=1,
-    max_distance=100,
-    min_ascent=0,
-    max_ascent=4000,
+    min_distance=7,
+    max_distance=13,
+    min_ascent=700,
+    max_ascent=1500,
     min_descent=0,
-    max_descent=3000,
-    min_duration=0,
-    max_duration=10000,
-    selected_technical=[],
-    selected_endurance=["medium","difficult","easy"]
+    max_descent=700,
+    min_duration=300,
+    max_duration=100000,
+    selected_technical=["medium"],
+    selected_endurance=["difficult"]
 )
 
 
@@ -84,5 +84,5 @@ for hike in filtered_hikes:
 
 
 # Print number of matching hikes
-print(f"\nNumber of matching hikes: {len(filtered_hikes)}\n") ######## nutzen um in streamlit die Anzahl der Ausgegebenen Wanderungen anzuzeigen, muss dann allerdings aus wetter oder route kommen  
+#print(f"\nNumber of matching hikes: {len(filtered_hikes)}\n") ######## nutzen um in streamlit die Anzahl der Ausgegebenen Wanderungen anzuzeigen, muss dann allerdings aus wetter oder route kommen  
 

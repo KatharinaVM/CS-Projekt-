@@ -57,16 +57,16 @@ def filter_hikes (
 # Test the filter_hikes function
 filtered_hikes = filter_hikes(
     hikes,
-    min_distance=7,
-    max_distance=13,
-    min_ascent=700,
-    max_ascent=1500,
+    min_distance=0,
+    max_distance=100,
+    min_ascent=0,
+    max_ascent=4100,
     min_descent=0,
-    max_descent=700,
-    min_duration=300,
-    max_duration=100000,
-    selected_technical=["medium"],
-    selected_endurance=["difficult"]
+    max_descent=2800,
+    min_duration=0,
+    max_duration=1440,
+    selected_technical=["medium","easy","difficult"],
+    selected_endurance=["difficult","easy","medium"]
 )
 
 

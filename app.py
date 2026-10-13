@@ -195,6 +195,7 @@ if submitted:
         selected_endurance=selected_endurance,
     )
     st.session_state["matching_hikes"] = filtered_hikes
+    st.session_state["hike_page"] = 1 # Von Kathi hinzugefügt
 
 if "matching_hikes" in st.session_state:
     results = st.session_state["matching_hikes"]
@@ -207,9 +208,40 @@ if "matching_hikes" in st.session_state:
     else:
         # Don't render hundreds of result cards at once.
         count_to_show = st.selectbox("Show first", [10, 20, 50], index=1)
-        for hike in results[:count_to_show]:
+
+        #Von Kathi Z. 211 bis 225
+                # Pagination: calculate which hikes belong to the current page
+        total_pages = max(1, math.ceil(len(results) / count_to_show))
+
+        if "hike_page" not in st.session_state:
+            st.session_state["hike_page"] = 1
+
+        st.session_state["hike_page"] = min(
+            st.session_state["hike_page"], total_pages
+        )
+
+        current_page = st.session_state["hike_page"]
+
+        start_index = (current_page - 1) * count_to_show
+        end_index = start_index + count_to_show
+
+
+        for hike in results[start_index:end_index]: # Klammer ersetzt von Kathi, ursprünglich :count_to_show
             with st.container(border=True):
                 st.subheader(str(hike.get("name") or "Unnamed hike"))
+
+                # Z.213-224 Kathi, Display the hiking image from hikes_data.json, 
+                images = hike.get("images") or []
+
+                if images:
+                    st.image(images[0], width=350)
+
+                # Display starting point and destination
+                itinerary = hike.get("itinerary") or []
+
+                if itinerary:
+                    st.write("📍 " + " → ".join(itinerary))
+
                 metrics = st.columns(4)
                 metrics[0].write(f"🥾 {hike['distance_km']} km")
                 metrics[1].write(f"↗ {hike['ascent_m']} m")
@@ -219,7 +251,58 @@ if "matching_hikes" in st.session_state:
                     f"Technical: {hike['technical_difficulty']}  ·  "
                     f"Endurance: {hike['endurance_difficulty']}"
                 )
-        if len(results) > count_to_show:
-            st.caption(f"Showing {count_to_show} of {len(results)} matching hikes.")
+                # Kathi Z. 235 - 251 Additional hiking information
+                with st.expander("More information"):
+
+                    description = hike.get("description")
+                    if description:
+                        st.write(description)
+
+                    season = hike.get("season")
+                    if season:
+                        st.write(f"**Season:** {season}")
+
+                    schweizmobil_url = hike.get("schweizmobil_url")
+                    if schweizmobil_url:
+                        st.link_button(
+                            "View on SchweizMobil",
+                            schweizmobil_url
+                        )
+        # Von Rocio ursprünlich: 
+        # if len(results) > count_to_show:
+        #     st.caption(f"Showing {count_to_show} of {len(results)} matching hikes.")
+        # Von Kathi neu: Z. 273-305
+                # Navigation between result pages
+        prev_col, page_col, next_col = st.columns([1, 2, 1])
+
+        with prev_col:
+            if st.button(
+                "← Previous",
+                disabled=current_page == 1
+            ):
+                st.session_state["hike_page"] -= 1
+                st.rerun()
+
+        with page_col:
+            st.markdown(
+                f"<p style='text-align:center;'>"
+                f"Page {current_page} of {total_pages}"
+                f"</p>",
+                unsafe_allow_html=True
+            )
+
+        with next_col:
+            if st.button(
+                "Next →",
+                disabled=current_page == total_pages
+            ):
+                st.session_state["hike_page"] += 1
+                st.rerun()
+
+        st.caption(
+            f"Showing {start_index + 1}–"
+            f"{min(end_index, len(results))} "
+            f"of {len(results)} matching hikes."
+        )
 else:
     st.info("Choose your preferences above and click ‘Find my hikes’ to see results.")

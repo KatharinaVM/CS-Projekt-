@@ -1,5 +1,9 @@
-streamlit 
+streamlit
 requests==2.32.5
 python-dotenv
-openrouteservices
-math
+openrouteservice
+openmeteo-requests
+numpy
+pandas
+requests-cache
+retry-requests

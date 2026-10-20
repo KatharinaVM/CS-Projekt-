@@ -2,3 +2,10 @@ streamlit
 requests==2.32.5
 python-dotenv
 openrouteservices
+
+import openmeteo_requests
+import numpy as np
+import pandas as pd
+import requests_cache
+from retry_requests import retry
+import datetime (Weather

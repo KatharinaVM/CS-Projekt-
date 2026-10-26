@@ -57,6 +57,17 @@ def get_weather_forecast(latitude, longitude):
 
     return forecast
 
+print("\nDays with suitable weather:")
+
+for day in forecast:
+    if check_weather(
+        day,
+        max_rain=2,
+        min_temperature=5,
+        max_temperature=25
+    ):
+        print(day["date"], "- Suitable weather")
+
 if __name__ == "__main__":
     forecast = get_weather_forecast(
         latitude=46.95,

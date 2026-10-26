@@ -1,3 +1,4 @@
+from datetime import datetime
 import openmeteo_requests
 import requests_cache
 from retry_requests import retry
@@ -40,9 +41,9 @@ def get_weather_forecast(latitude, longitude):
 
     for i in range(len(daily.Variables(0).ValuesAsNumpy())):
         forecast.append({
-            "date": str(
-                daily.Time() + i * daily.Interval()
-            ),
+           "date": datetime.fromtimestamp(
+               daily.Time() + i * daily.Interval()
+           ).strftime("%Y-%m-%d"),
             "rain_mm": float(
                 daily.Variables(0).ValuesAsNumpy()[i]
             ),

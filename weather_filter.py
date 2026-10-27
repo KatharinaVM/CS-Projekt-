@@ -37,7 +37,14 @@ def get_weather_forecast(latitude, longitude):
         "timezone": "auto"
     }
 
-    responses = openmeteo.weather_api(url, params=params)
+    try:
+        responses = openmeteo.weather_api(url, params=params)
+    
+    except Exception as error:
+        print("Error while fetching weather data:", error)
+        raise RuntimeError(
+            "Weather data could not be retrieved. Please try again later."
+        ) from error
     response = responses[0]
     daily = response.Daily()
 

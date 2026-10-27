@@ -167,7 +167,7 @@ with st.form("hiking_search"):
     with weather_col:
         st.markdown('<div class="card-heading"><strong>☀️ Weather</strong>'
                     '<span>Find suitable conditions for your hike</span></div>', unsafe_allow_html=True)
-        third_image = IMAGES_DIR / "Beispielbild 3.jpeg"
+        third_image = IMAGES_DIR / "Beispielbild 3.jpg"
         if third_image.is_file():
             st.image(str(third_image), use_container_width=True) #neu wetter filter
         

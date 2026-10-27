@@ -103,6 +103,62 @@ def check_weather_for_date(
     # Return False if the date is not in the forecast
     return False
 
+# Get weather forecasts for multiple hiking locations
+def get_weather_forecasts_batch(hikes):
+
+    url = "https://api.open-meteo.com/v1/forecast"
+
+    # Collect coordinates of all hikes
+    latitudes = [hike["latitude"] for hike in hikes]
+    longitudes = [hike["longitude"] for hike in hikes]
+
+    params = {
+        "latitude": latitudes,
+        "longitude": longitudes,
+        "daily": [
+            "rain_sum",
+            "temperature_2m_max",
+            "temperature_2m_min"
+        ],
+        "forecast_days": 7,
+        "timezone": "Europe/Zurich"
+    }
+
+    # Request weather data for all locations at once
+    responses = openmeteo.weather_api(url, params=params)
+
+    all_forecasts = []
+
+    # Process each location separately
+    for response in responses:
+
+        daily = response.Daily()
+        forecast = []
+
+        for i in range(len(daily.Variables(0).ValuesAsNumpy())):
+
+            forecast.append({
+                "date": datetime.fromtimestamp(
+                    daily.Time() + i * daily.Interval()
+                ).strftime("%Y-%m-%d"),
+
+                "rain_mm": float(
+                    daily.Variables(0).ValuesAsNumpy()[i]
+                ),
+
+                "temperature_max": float(
+                    daily.Variables(1).ValuesAsNumpy()[i]
+                ),
+
+                "temperature_min": float(
+                    daily.Variables(2).ValuesAsNumpy()[i]
+                )
+            })
+
+        all_forecasts.append(forecast)
+
+    return all_forecasts
+
 # Filter hikes based on weather conditions
 def filter_hikes_by_weather(
     hikes,
@@ -140,7 +196,7 @@ def filter_hikes_by_weather(
 
     return suitable_hikes
 
-# Test the weather filter
+# Test batch weather requests
 if __name__ == "__main__":
 
     import json
@@ -149,19 +205,19 @@ if __name__ == "__main__":
     with open("hikes_data.json", "r", encoding="utf-8") as file:
         hikes = json.load(file)
 
-    # Test with only 5 hikes
-    test_hikes = hikes[:5]
+    # Test with 5 hikes
+    test_hikes = [
+        hike for hike in hikes
+        if hike.get("latitude") is not None
+        and hike.get("longitude") is not None
+    ][:5]
 
-    # Filter hikes by weather
-    suitable_hikes = filter_hikes_by_weather(
-        hikes=test_hikes,
-        selected_date="2026-10-29",
-        max_rain=2,
-        min_temperature=5,
-        max_temperature=25
-    )
+    # Get weather forecasts for all 5 hikes
+    all_forecasts = get_weather_forecasts_batch(test_hikes)
 
-    print("Number of suitable hikes:", len(suitable_hikes))
+    print("Number of hikes:", len(test_hikes))
+    print("Number of forecasts:", len(all_forecasts))
 
-    for hike in suitable_hikes:
-        print(hike["name"])
+    # Display first forecast day for each hike
+    for hike, forecast in zip(test_hikes, all_forecasts):
+        print(hike["name"], "-", forecast[0])

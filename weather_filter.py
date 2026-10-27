@@ -106,24 +106,20 @@ def check_weather_for_date(
 # Test the weather filter
 if __name__ == "__main__":
 
-    # Get weather forecast for Bern
     forecast = get_weather_forecast(
         latitude=46.95,
         longitude=7.45
     )
 
-    # Print all forecast days
-    for day in forecast:
-        print(day)
+    selected_date = forecast[0]["date"]
 
-    # Check which days have suitable weather
-    print("\nDays with suitable weather:")
+    suitable = check_weather_for_date(
+        forecast,
+        selected_date,
+        max_rain=2,
+        min_temperature=5,
+        max_temperature=25
+    )
 
-    for day in forecast:
-        if check_weather(
-            day,
-            max_rain=2,
-            min_temperature=5,
-            max_temperature=25
-        ):
-            print(day["date"], "- Suitable weather")
+    print("Selected hiking date:", selected_date)
+    print("Suitable weather:", suitable)

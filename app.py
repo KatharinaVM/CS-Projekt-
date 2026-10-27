@@ -5,10 +5,12 @@ import base64
 import json
 import math
 from pathlib import Path
+from datetime import date, timedelta #neu für wetter filter 
 
 import streamlit as st
 
 from hikingfilters import filter_hikes
+from weather_filter import filter_hikes_by_weather #neu für wetter filter 
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -171,11 +173,22 @@ with st.form("hiking_search"):
             'display:flex;align-items:center;justify-content:center;font-size:3.5rem">⛅</div>',
             unsafe_allow_html=True,
         )
-        st.date_input("Hiking date", disabled=True)
-        st.multiselect("Preferred weather", ["Sunny", "Cloudy", "Dry"], disabled=True)
-        st.markdown('<div class="future-note">Coming soon: wetter_daten.json and '
-                    'weather filter logic. Weather does not affect results yet.</div>',
-                    unsafe_allow_html=True)
+        selected_date = st.date_input(
+            "Hiking date",
+            value=date.today(),
+            min_value=date.today(),
+            max_value=date.today() + timedelta(days=6)
+        ) #neu wetter filter
+
+        max_rain = st.slider(
+            "Maximum rainfall (mm)",
+            0.0, 30.0, 2.0, step=0.5
+        ) #neu wetter filter
+
+        min_temperature, max_temperature = st.slider(
+            "Temperature range (°C)",
+            -20, 40, (5, 25)
+        ) #neu wetter filter
 
     st.write("")
     submitted = st.form_submit_button("Find my hikes →", type="primary", use_container_width=True)
@@ -201,7 +214,7 @@ if "matching_hikes" in st.session_state:
     results = st.session_state["matching_hikes"]
     st.markdown('<h2 class="result-header">Your matching hikes</h2>', unsafe_allow_html=True)
     st.metric("Matching hikes", len(results))
-    st.caption("Results currently use hiking filters only; car routes and weather are not applied yet.")
+    st.caption("Results include hiking and weather filters. Car routes are not applied yet.") #neu wetter filter
 
     if not results:
         st.info("No hikes match your selection. Try widening the filters.")

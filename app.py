@@ -170,7 +170,7 @@ with st.form("hiking_search"):
         third_image = IMAGES_DIR / "Beispielbild 3.jpeg"
         if third_image.is_file():
             st.image(str(third_image), use_container_width=True) #neu wetter filter
-        )
+        
         selected_date = st.date_input(
             "Hiking date",
             value=date.today(),

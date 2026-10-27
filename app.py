@@ -167,11 +167,9 @@ with st.form("hiking_search"):
     with weather_col:
         st.markdown('<div class="card-heading"><strong>☀️ Weather</strong>'
                     '<span>Find suitable conditions for your hike</span></div>', unsafe_allow_html=True)
-        st.markdown(
-            '<div style="height:145px;border-radius:14px;margin-bottom: .4rem;'
-            'background:linear-gradient(130deg,#c4d6cb,#9cb8b2 55%,#e3dcc3);'
-            'display:flex;align-items:center;justify-content:center;font-size:3.5rem">⛅</div>',
-            unsafe_allow_html=True,
+        third_image = IMAGES_DIR / "Beispielbild 3.jpeg"
+        if third_image.is_file():
+            st.image(str(third_image), use_container_width=True) #neu wetter filter
         )
         selected_date = st.date_input(
             "Hiking date",

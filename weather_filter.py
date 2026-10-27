@@ -103,23 +103,65 @@ def check_weather_for_date(
     # Return False if the date is not in the forecast
     return False
 
+# Filter hikes based on weather conditions
+def filter_hikes_by_weather(
+    hikes,
+    selected_date,
+    max_rain,
+    min_temperature,
+    max_temperature
+):
+    suitable_hikes = []
+
+    for hike in hikes:
+
+        # Skip hikes without coordinates
+        if hike.get("latitude") is None or hike.get("longitude") is None:
+            continue
+
+        # Get weather forecast for the hike location
+        forecast = get_weather_forecast(
+            latitude=hike["latitude"],
+            longitude=hike["longitude"]
+        )
+
+        # Check weather for the selected date
+        suitable = check_weather_for_date(
+            forecast,
+            selected_date,
+            max_rain,
+            min_temperature,
+            max_temperature
+        )
+
+        # Add suitable hikes to the results
+        if suitable:
+            suitable_hikes.append(hike)
+
+    return suitable_hikes
+
 # Test the weather filter
 if __name__ == "__main__":
 
-    forecast = get_weather_forecast(
-        latitude=46.95,
-        longitude=7.45
-    )
+    import json
 
-    selected_date = forecast[0]["date"]
+    # Load hiking data
+    with open("hikes_data.json", "r", encoding="utf-8") as file:
+        hikes = json.load(file)
 
-    suitable = check_weather_for_date(
-        forecast,
-        selected_date,
+    # Test with only 5 hikes
+    test_hikes = hikes[:5]
+
+    # Filter hikes by weather
+    suitable_hikes = filter_hikes_by_weather(
+        hikes=test_hikes,
+        selected_date="2026-10-29",
         max_rain=2,
         min_temperature=5,
         max_temperature=25
     )
 
-    print("Selected hiking date:", selected_date)
-    print("Suitable weather:", suitable)
+    print("Number of suitable hikes:", len(suitable_hikes))
+
+    for hike in suitable_hikes:
+        print(hike["name"])

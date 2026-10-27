@@ -79,6 +79,29 @@ def check_weather(day, max_rain, min_temperature, max_temperature):
 
     return True
 
+# Check weather for a selected hiking date
+def check_weather_for_date(
+    forecast,
+    selected_date,
+    max_rain,
+    min_temperature,
+    max_temperature
+):
+    for day in forecast:
+
+        # Find the selected date
+        if day["date"] == str(selected_date):
+
+            # Check weather conditions
+            return check_weather(
+                day,
+                max_rain,
+                min_temperature,
+                max_temperature
+            )
+
+    # Return False if the date is not in the forecast
+    return False
 
 # Test the weather filter
 if __name__ == "__main__":

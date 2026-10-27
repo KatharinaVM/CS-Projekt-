@@ -230,7 +230,7 @@ if __name__ == "__main__":
         hikes = json.load(file)
 
     # Test with 40 hikes
-    test_hikes = hikes[40]
+    test_hikes = hikes[:40]
 
     suitable_hikes = filter_hikes_by_weather(
         hikes=test_hikes,

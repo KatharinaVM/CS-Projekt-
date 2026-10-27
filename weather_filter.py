@@ -5,9 +5,7 @@ import requests_cache
 from retry_requests import retry
 
 
-# --------------------------------------------------
 # 1. Open-Meteo-Verbindung
-# --------------------------------------------------
 
 cache_session = requests_cache.CachedSession(
     ".cache",
@@ -25,9 +23,7 @@ openmeteo = openmeteo_requests.Client(
 )
 
 
-# --------------------------------------------------
 # 2. Wetterdaten für einen Standort abrufen
-# --------------------------------------------------
 
 def get_weather_forecast(latitude, longitude):
 
@@ -41,9 +37,7 @@ def get_weather_forecast(latitude, longitude):
     return forecasts[0]
 
 
-# --------------------------------------------------
 # 3. Wetterdaten für mehrere Standorte abrufen
-# --------------------------------------------------
 
 def get_weather_forecasts_batch(hikes):
 
@@ -115,9 +109,7 @@ def get_weather_forecasts_batch(hikes):
     return all_forecasts
 
 
-# --------------------------------------------------
 # 4. Wetterbedingungen überprüfen
-# --------------------------------------------------
 
 def check_weather(
     day,
@@ -138,9 +130,7 @@ def check_weather(
     return True
 
 
-# --------------------------------------------------
 # 5. Wetter für ein bestimmtes Datum überprüfen
-# --------------------------------------------------
 
 def check_weather_for_date(
     forecast,
@@ -164,9 +154,7 @@ def check_weather_for_date(
     return False
 
 
-# --------------------------------------------------
 # 6. Wanderungen nach Wetter filtern
-# --------------------------------------------------
 
 def filter_hikes_by_weather(
     hikes,
@@ -237,9 +225,7 @@ def filter_hikes_by_weather(
     return suitable_hikes
 
 
-# --------------------------------------------------
 # 7. Test
-# --------------------------------------------------
 
 if __name__ == "__main__":
 

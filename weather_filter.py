@@ -1,10 +1,14 @@
 from datetime import datetime, timezone, timedelta
+
 import openmeteo_requests
 import requests_cache
 from retry_requests import retry
 
 
-# Open-Meteo-Client mit Cache und automatischen Wiederholungen
+# --------------------------------------------------
+# 1. Open-Meteo-Verbindung
+# --------------------------------------------------
+
 cache_session = requests_cache.CachedSession(
     ".cache",
     expire_after=3600
@@ -21,104 +25,33 @@ openmeteo = openmeteo_requests.Client(
 )
 
 
-# Get weather forecast for a location
+# --------------------------------------------------
+# 2. Wetterdaten für einen Standort abrufen
+# --------------------------------------------------
+
 def get_weather_forecast(latitude, longitude):
-    url = "https://api.open-meteo.com/v1/forecast"
 
-    params = {
-        "latitude": latitude,
-        "longitude": longitude,
-        "daily": [
-            "rain_sum",
-            "temperature_2m_max",
-            "temperature_2m_min"
-        ],
-        "forecast_days": 7,
-        "timezone": "auto"
-    }
+    forecasts = get_weather_forecasts_batch([
+        {
+            "latitude": latitude,
+            "longitude": longitude
+        }
+    ])
 
-    try:
-        responses = openmeteo.weather_api(url, params=params)
-    
-    except Exception as error:
-        print("Error while fetching weather data:", error)
-        raise RuntimeError(
-            "Weather data could not be retrieved. Please try again later."
-        ) from error
-    response = responses[0]
-    daily = response.Daily()
-
-    forecast = []
-
-    for i in range(len(daily.Variables(0).ValuesAsNumpy())):
-        forecast.append({
-            "date": (
-    datetime.fromtimestamp(
-        daily.Time() + i * daily.Interval(),
-        tz=timezone.utc
-    ) + timedelta(seconds=response.UtcOffsetSeconds())
-).strftime("%Y-%m-%d"),
-            "rain_mm": float(
-                daily.Variables(0).ValuesAsNumpy()[i]
-            ),
-            "temperature_max": float(
-                daily.Variables(1).ValuesAsNumpy()[i]
-            ),
-            "temperature_min": float(
-                daily.Variables(2).ValuesAsNumpy()[i]
-            )
-        })
-
-    return forecast
+    return forecasts[0]
 
 
-# Check if weather conditions match the user's preferences
-def check_weather(day, max_rain, min_temperature, max_temperature):
+# --------------------------------------------------
+# 3. Wetterdaten für mehrere Standorte abrufen
+# --------------------------------------------------
 
-    # Check rainfall
-    if day["rain_mm"] > max_rain:
-        return False
-
-    # Check minimum temperature
-    if day["temperature_min"] < min_temperature:
-        return False
-
-    # Check maximum temperature
-    if day["temperature_max"] > max_temperature:
-        return False
-
-    return True
-
-# Check weather for a selected hiking date
-def check_weather_for_date(
-    forecast,
-    selected_date,
-    max_rain,
-    min_temperature,
-    max_temperature
-):
-    for day in forecast:
-
-        # Find the selected date
-        if day["date"] == str(selected_date):
-
-            # Check weather conditions
-            return check_weather(
-                day,
-                max_rain,
-                min_temperature,
-                max_temperature
-            )
-
-    # Return False if the date is not in the forecast
-    return False
-
-# Get weather forecasts for multiple hiking locations
 def get_weather_forecasts_batch(hikes):
 
+    if not hikes:
+        return []
+
     url = "https://api.open-meteo.com/v1/forecast"
 
-    # Collect coordinates of all hikes
     latitudes = [hike["latitude"] for hike in hikes]
     longitudes = [hike["longitude"] for hike in hikes]
 
@@ -134,45 +67,107 @@ def get_weather_forecasts_batch(hikes):
         "timezone": "Europe/Zurich"
     }
 
-    # Request weather data for all locations at once
-    responses = openmeteo.weather_api(url, params=params)
+    try:
+        responses = openmeteo.weather_api(
+            url,
+            params=params
+        )
+
+    except Exception as error:
+        raise RuntimeError(
+            "Weather data could not be retrieved. "
+            "Please try again later."
+        ) from error
 
     all_forecasts = []
 
-    # Process each location separately
     for response in responses:
 
         daily = response.Daily()
+
+        rain_values = daily.Variables(0).ValuesAsNumpy()
+        max_values = daily.Variables(1).ValuesAsNumpy()
+        min_values = daily.Variables(2).ValuesAsNumpy()
+
         forecast = []
 
-        for i in range(len(daily.Variables(0).ValuesAsNumpy())):
+        for i in range(len(rain_values)):
 
-            forecast.append({
-                "date": (
+            forecast_date = (
                 datetime.fromtimestamp(
                     daily.Time() + i * daily.Interval(),
                     tz=timezone.utc
-                ) + timedelta(seconds=response.UtcOffsetSeconds())
-                ).strftime("%Y-%m-%d"),
-
-                "rain_mm": float(
-                    daily.Variables(0).ValuesAsNumpy()[i]
-                ),
-
-                "temperature_max": float(
-                    daily.Variables(1).ValuesAsNumpy()[i]
-                ),
-
-                "temperature_min": float(
-                    daily.Variables(2).ValuesAsNumpy()[i]
                 )
+                + timedelta(
+                    seconds=response.UtcOffsetSeconds()
+                )
+            ).strftime("%Y-%m-%d")
+
+            forecast.append({
+                "date": forecast_date,
+                "rain_mm": float(rain_values[i]),
+                "temperature_max": float(max_values[i]),
+                "temperature_min": float(min_values[i])
             })
 
         all_forecasts.append(forecast)
 
     return all_forecasts
 
-# Filter hikes based on weather conditions using batch requests
+
+# --------------------------------------------------
+# 4. Wetterbedingungen überprüfen
+# --------------------------------------------------
+
+def check_weather(
+    day,
+    max_rain,
+    min_temperature,
+    max_temperature
+):
+
+    if day["rain_mm"] > max_rain:
+        return False
+
+    if day["temperature_min"] < min_temperature:
+        return False
+
+    if day["temperature_max"] > max_temperature:
+        return False
+
+    return True
+
+
+# --------------------------------------------------
+# 5. Wetter für ein bestimmtes Datum überprüfen
+# --------------------------------------------------
+
+def check_weather_for_date(
+    forecast,
+    selected_date,
+    max_rain,
+    min_temperature,
+    max_temperature
+):
+
+    for day in forecast:
+
+        if day["date"] == str(selected_date):
+
+            return check_weather(
+                day,
+                max_rain,
+                min_temperature,
+                max_temperature
+            )
+
+    return False
+
+
+# --------------------------------------------------
+# 6. Wanderungen nach Wetter filtern
+# --------------------------------------------------
+
 def filter_hikes_by_weather(
     hikes,
     selected_date,
@@ -183,58 +178,84 @@ def filter_hikes_by_weather(
 
     suitable_hikes = []
 
-    # Skip hikes without coordinates
     valid_hikes = [
         hike for hike in hikes
         if hike.get("latitude") is not None
         and hike.get("longitude") is not None
     ]
 
-    # Process hikes in batches of 20
     batch_size = 20
 
-    for start_index in range(0, len(valid_hikes), batch_size):
+    for start_index in range(
+        0,
+        len(valid_hikes),
+        batch_size
+    ):
 
-        batch = valid_hikes[start_index:start_index + batch_size]
-        print(
-            f"Processing hikes {start_index + 1} "
-            f"to {min(start_index + batch_size, len(valid_hikes))} "
-            f"of {len(valid_hikes)}"
+        batch = valid_hikes[
+            start_index:start_index + batch_size
+        ]
+
+        all_forecasts = get_weather_forecasts_batch(
+            batch
         )
 
-        # Get weather forecasts for the entire batch
-        all_forecasts = get_weather_forecasts_batch(batch)
+        for hike, forecast in zip(
+            batch,
+            all_forecasts
+        ):
 
-        # Check weather for each hike
-        for hike, forecast in zip(batch, all_forecasts):
+            matching_day = next(
+                (
+                    day for day in forecast
+                    if day["date"] == str(selected_date)
+                ),
+                None
+            )
 
-            suitable = check_weather_for_date(
-                forecast,
-                selected_date,
+            if matching_day is None:
+                continue
+
+            suitable = check_weather(
+                matching_day,
                 max_rain,
                 min_temperature,
                 max_temperature
             )
 
             if suitable:
-                suitable_hikes.append(hike)
+
+                # Wetterdaten zusätzlich speichern
+                hike_with_weather = hike.copy()
+
+                hike_with_weather["weather"] = matching_day
+
+                suitable_hikes.append(
+                    hike_with_weather
+                )
 
     return suitable_hikes
 
-# Test batch weather requests
+
+# --------------------------------------------------
+# 7. Test
+# --------------------------------------------------
+
 if __name__ == "__main__":
 
     import json
+    from pathlib import Path
 
-    with open("hikes_data.json", "r", encoding="utf-8") as file:
+    data_path = Path(__file__).resolve().parent / "hikes_data.json"
+
+    with data_path.open("r", encoding="utf-8") as file:
         hikes = json.load(file)
 
-    # Test with 40 hikes
     test_hikes = hikes[:40]
 
     suitable_hikes = filter_hikes_by_weather(
         hikes=test_hikes,
-        selected_date="2026-10-29",
+        selected_date=datetime.now().date(),
         max_rain=2,
         min_temperature=5,
         max_temperature=25
@@ -244,4 +265,21 @@ if __name__ == "__main__":
     print("Number of suitable hikes:", len(suitable_hikes))
 
     for hike in suitable_hikes:
-        print(hike["name"])
+
+        print("---------------------------")
+        print("Hike:", hike.get("name"))
+
+        weather = hike["weather"]
+
+        print("Date:", weather["date"])
+        print("Rain:", weather["rain_mm"], "mm")
+        print(
+            "Minimum temperature:",
+            weather["temperature_min"],
+            "°C"
+        )
+        print(
+            "Maximum temperature:",
+            weather["temperature_max"],
+            "°C"
+        )

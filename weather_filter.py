@@ -196,6 +196,11 @@ def filter_hikes_by_weather(
     for start_index in range(0, len(valid_hikes), batch_size):
 
         batch = valid_hikes[start_index:start_index + batch_size]
+        print(
+            f"Processing hikes {start_index + 1} "
+            f"to {min(start_index + batch_size, len(valid_hikes))} "
+            f"of {len(valid_hikes)}"
+        )
 
         # Get weather forecasts for the entire batch
         all_forecasts = get_weather_forecasts_batch(batch)
@@ -224,8 +229,8 @@ if __name__ == "__main__":
     with open("hikes_data.json", "r", encoding="utf-8") as file:
         hikes = json.load(file)
 
-    # Test with 20 hikes
-    test_hikes = hikes[:20]
+    # Test with 40 hikes
+    test_hikes = hikes[40]
 
     suitable_hikes = filter_hikes_by_weather(
         hikes=test_hikes,

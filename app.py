@@ -208,6 +208,28 @@ if submitted:
     st.session_state["matching_hikes"] = filtered_hikes
     st.session_state["hike_page"] = 1 # Von Kathi hinzugefügt
 
+ # 2. Zusätzlich nach Wetter filtern
+    try:
+        with st.spinner("Checking weather forecasts..."):
+
+            filtered_hikes = filter_hikes_by_weather(
+                hikes=filtered_hikes,
+                selected_date=selected_date,
+                max_rain=max_rain,
+                min_temperature=min_temperature,
+                max_temperature=max_temperature
+            )
+
+    except Exception as error:
+        st.error(f"Weather forecast could not be loaded: {error}")
+        st.stop()
+
+    # 3. Gefilterte Wanderungen speichern
+    st.session_state["matching_hikes"] = filtered_hikes
+    st.session_state["hike_page"] = 1
+    st.session_state["weather_date"] = str(selected_date)
+
+
 if "matching_hikes" in st.session_state:
     results = st.session_state["matching_hikes"]
     st.markdown('<h2 class="result-header">Your matching hikes</h2>', unsafe_allow_html=True)
@@ -262,6 +284,33 @@ if "matching_hikes" in st.session_state:
                     f"Technical: {hike['technical_difficulty']}  ·  "
                     f"Endurance: {hike['endurance_difficulty']}"
                 )
+                # Wetterprognose anzeigen
+                weather = hike.get("weather")
+
+                if weather:
+                    st.markdown("#### 🌤️ Weather forecast")
+
+                    col1, col2, col3 = st.columns(3)
+
+                    with col1:
+                        st.metric(
+                            "Minimum temperature",
+                            f"{weather['temperature_min']:.1f} °C"
+                        )
+
+                    with col2:
+                        st.metric(
+                            "Maximum temperature",
+                            f"{weather['temperature_max']:.1f} °C"
+                        )
+
+                    with col3:
+                        st.metric(
+                            "Rainfall",
+                            f"{weather['rain_mm']:.1f} mm"
+                        )
+
+                    st.caption(f"Forecast for {weather['date']}")
                 # Kathi Z. 235 - 251 Additional hiking information
                 with st.expander("More information"):
 

@@ -11,7 +11,7 @@ import streamlit as st
 
 from hikingfilters import filter_hikes
 from weather_filter import filter_hikes_by_weather #neu für wetter filter 
-
+from car_routes import filter_hikes_by_car  #neu auto filter
 
 BASE_DIR = Path(__file__).resolve().parent
 IMAGES_DIR = BASE_DIR / "images"
@@ -158,11 +158,20 @@ with st.form("hiking_search"):
         second_image = IMAGES_DIR / "Beispielbild 2.jpeg"
         if second_image.is_file():
             st.image(str(second_image), use_container_width=True)
-        st.text_input("Starting location", placeholder="e.g. Zürich", disabled=True)
-        st.slider("Maximum driving time (minutes)", 0, 240, 90, disabled=True)
-        st.markdown('<div class="future-note">Coming soon: car route calculations. '
-                    'Travel inputs will be enabled when the routing module is connected.</div>',
-                    unsafe_allow_html=True)
+#neu auto filter
+start_location = st.text_input(
+    "Starting location",
+    value="Winterthur",
+    placeholder="e.g. Zürich"
+)
+
+max_driving_time = st.slider(
+    "Maximum driving time (minutes)",
+    min_value=15,
+    max_value=240,
+    value=90,
+    step=15
+)
 
     with weather_col:
         st.markdown('<div class="card-heading"><strong>☀️ Weather</strong>'
@@ -205,8 +214,22 @@ if submitted:
         selected_technical=selected_technical,
         selected_endurance=selected_endurance,
     )
-    st.session_state["matching_hikes"] = filtered_hikes
-    st.session_state["hike_page"] = 1 # Von Kathi hinzugefügt
+    #neu auto filter
+    if not start_location.strip():
+        st.error("Please enter a starting location.")
+        st.stop()
+
+    try:
+        with st.spinner("Calculating driving times..."):
+            filtered_hikes = filter_hikes_by_car(
+                hikes=filtered_hikes,
+                start_location=start_location.strip(),
+                max_driving_time=max_driving_time
+            )
+
+    except Exception as error:
+        st.error(f"Car routes could not be calculated: {error}")
+        st.stop()
 
  # 2. Zusätzlich nach Wetter filtern
     try:
@@ -234,7 +257,7 @@ if "matching_hikes" in st.session_state:
     results = st.session_state["matching_hikes"]
     st.markdown('<h2 class="result-header">Your matching hikes</h2>', unsafe_allow_html=True)
     st.metric("Matching hikes", len(results))
-    st.caption("Results include hiking and weather filters. Car routes are not applied yet.") #neu wetter filter
+    st.caption("Results include hiking, car travel time and weather filters.") #neu auto filter
 
     if not results:
         st.info("No hikes match your selection. Try widening the filters.")
@@ -284,6 +307,11 @@ if "matching_hikes" in st.session_state:
                     f"Technical: {hike['technical_difficulty']}  ·  "
                     f"Endurance: {hike['endurance_difficulty']}"
                 )
+                #neu auto filter
+                if hike.get("driving_time_min") is not None:
+                    st.write(f"🚗 Driving time: {hike['driving_time_min']} minutes")
+                    st.write(f"Driving distance: {hike['driving_distance_km']} km")
+                
                 # Wetterprognose anzeigen
                 weather = hike.get("weather")
 

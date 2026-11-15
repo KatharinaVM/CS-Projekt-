@@ -158,20 +158,20 @@ with st.form("hiking_search"):
         second_image = IMAGES_DIR / "Beispielbild 2.jpeg"
         if second_image.is_file():
             st.image(str(second_image), use_container_width=True)
-#neu auto filter
-start_location = st.text_input(
-    "Starting location",
-    value="Winterthur",
-    placeholder="e.g. Zürich"
-)
+    #neu auto filter
+        start_location = st.text_input(
+        "Starting location",
+        value="Winterthur",
+        placeholder="e.g. Zürich"
+    )
 
-max_driving_time = st.slider(
-    "Maximum driving time (minutes)",
-    min_value=15,
-    max_value=240,
-    value=90,
-    step=15
-)
+    max_driving_time = st.slider(
+        "Maximum driving time (minutes)",
+        min_value=15,
+        max_value=240,
+        value=90,
+        step=15
+    )
 
     with weather_col:
         st.markdown('<div class="card-heading"><strong>☀️ Weather</strong>'

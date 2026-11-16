@@ -1,3 +1,9 @@
 .env
 .env.jonathan
 hiking_progress.json
+
+
+__pycache__/
+*.pyc
+.DS_Store
+.env.*

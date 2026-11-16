@@ -216,21 +216,21 @@ if submitted:
         selected_endurance=selected_endurance,
     )
     #neu auto filter
-    #if not start_location.strip():
-        #st.error("Please enter a starting location.")
-        #st.stop()
+    if not start_location.strip():
+        st.error("Please enter a starting location.")
+        st.stop()
 
-    #try:
-        #with st.spinner("Calculating driving times..."):
-            #filtered_hikes = filter_hikes_by_car(
-                #hikes=filtered_hikes,
-                #start_location=start_location.strip(),
-                #max_driving_time=max_driving_time
-            #)
+    try:
+        with st.spinner("Calculating driving times..."):
+            filtered_hikes = filter_hikes_by_car(
+                hikes=filtered_hikes,
+                start_location=start_location.strip(),
+                max_driving_time=max_driving_time
+            )
 
-    #except Exception as error:
-        #st.error(f"Car routes could not be calculated: {error}")
-        #st.stop()
+    except Exception as error:
+        st.error(f"Car routes could not be calculated: {error}")
+        st.stop()
 
  # 2. Zusätzlich nach Wetter filtern
     try:
@@ -283,140 +283,140 @@ if "matching_hikes" in st.session_state:
         end_index = start_index + count_to_show
 
 
-for hike in results[start_index:end_index]:
-
-    with st.container(border=True):
-
-        st.subheader(str(hike.get("name") or "Unnamed hike"))
-
-        # Zwei Spalten: links Wanderung, rechts Diagramm
-        left_col, right_col = st.columns([1, 1], gap="large")
-
-        with left_col:
-
-            # Wanderbild
-            images = hike.get("images") or []
-
-            if images:
-                st.image(images[0], use_container_width=True)
-
-            # Wanderroute
-            itinerary = hike.get("itinerary") or []
-
-            if itinerary:
-                st.write("📍 " + " → ".join(itinerary))
-
-            # Wanderinformationen
-            metrics = st.columns(2)
-
-            metrics[0].write(f"🥾 {hike['distance_km']} km")
-            metrics[1].write(f"↗ {hike['ascent_m']} m")
-
-            metrics[0].write(f"↘ {hike['descent_m']} m")
-            metrics[1].write(
-                f"⏱ {hike['duration_min'] / 60:.1f} h"
-            )
-
-            st.caption(
-                f"Technical: {hike['technical_difficulty']} · "
-                f"Endurance: {hike['endurance_difficulty']}"
-            )
-
-        with right_col:
-
-            st.markdown("#### 🌡️ Hourly temperature forecast")
-
-            hourly_forecast = hike.get("hourly_temperature")
-
-            if hourly_forecast:
-                show_temperature_chart(hourly_forecast)
-            else:
-                st.info("No hourly temperature data available.")
-                #neu auto filter
-                if hike.get("driving_time_min") is not None:
-                    st.write(f"🚗 Driving time: {hike['driving_time_min']} minutes")
-                    st.write(f"Driving distance: {hike['driving_distance_km']} km")
-                
-                # Wetterprognose anzeigen
-                weather = hike.get("weather")
-
-                if weather:
-                    st.markdown("#### 🌤️ Weather forecast")
-
-                    col1, col2, col3 = st.columns(3)
-
-                    with col1:
-                        st.metric(
-                            "Minimum temperature",
-                            f"{weather['temperature_min']:.1f} °C"
-                        )
-
-                    with col2:
-                        st.metric(
-                            "Maximum temperature",
-                            f"{weather['temperature_max']:.1f} °C"
-                        )
-
-                    with col3:
-                        st.metric(
-                            "Rainfall",
-                            f"{weather['rain_mm']:.1f} mm"
-                        )
-
-                    st.caption(f"Forecast for {weather['date']}")
-                # Kathi Z. 235 - 251 Additional hiking information
-                with st.expander("More information"):
-
-                    description = hike.get("description")
-                    if description:
-                        st.write(description)
-
-                    season = hike.get("season")
-                    if season:
-                        st.write(f"**Season:** {season}")
-
-                    schweizmobil_url = hike.get("schweizmobil_url")
-                    if schweizmobil_url:
-                        st.link_button(
-                            "View on SchweizMobil",
-                            schweizmobil_url
-                        )
+        for hike in results[start_index:end_index]:
+        
+            with st.container(border=True):
+        
+                st.subheader(str(hike.get("name") or "Unnamed hike"))
+        
+                # Zwei Spalten: links Wanderung, rechts Diagramm
+                left_col, right_col = st.columns([1, 1], gap="large")
+        
+                with left_col:
+        
+                    # Wanderbild
+                    images = hike.get("images") or []
+        
+                    if images:
+                        st.image(images[0], use_container_width=True)
+        
+                    # Wanderroute
+                    itinerary = hike.get("itinerary") or []
+        
+                    if itinerary:
+                        st.write("📍 " + " → ".join(itinerary))
+        
+                    # Wanderinformationen
+                    metrics = st.columns(2)
+        
+                    metrics[0].write(f"🥾 {hike['distance_km']} km")
+                    metrics[1].write(f"↗ {hike['ascent_m']} m")
+        
+                    metrics[0].write(f"↘ {hike['descent_m']} m")
+                    metrics[1].write(
+                        f"⏱ {hike['duration_min'] / 60:.1f} h"
+                    )
+        
+                    st.caption(
+                        f"Technical: {hike['technical_difficulty']} · "
+                        f"Endurance: {hike['endurance_difficulty']}"
+                    )
+        
+                with right_col:
+        
+                    st.markdown("#### 🌡️ Hourly temperature forecast")
+        
+                    hourly_forecast = hike.get("hourly_temperature")
+        
+                    if hourly_forecast:
+                        show_temperature_chart(hourly_forecast)
+                    else:
+                        st.info("No hourly temperature data available.")
+                        #neu auto filter
+                        if hike.get("driving_time_min") is not None:
+                            st.write(f"🚗 Driving time: {hike['driving_time_min']} minutes")
+                            st.write(f"Driving distance: {hike['driving_distance_km']} km")
+                        
+                        # Wetterprognose anzeigen
+                        weather = hike.get("weather")
+        
+                        if weather:
+                            st.markdown("#### 🌤️ Weather forecast")
+        
+                            col1, col2, col3 = st.columns(3)
+        
+                            with col1:
+                                st.metric(
+                                    "Minimum temperature",
+                                    f"{weather['temperature_min']:.1f} °C"
+                                )
+        
+                            with col2:
+                                st.metric(
+                                    "Maximum temperature",
+                                    f"{weather['temperature_max']:.1f} °C"
+                                )
+        
+                            with col3:
+                                st.metric(
+                                    "Rainfall",
+                                    f"{weather['rain_mm']:.1f} mm"
+                                )
+        
+                            st.caption(f"Forecast for {weather['date']}")
+                        # Kathi Z. 235 - 251 Additional hiking information
+                        with st.expander("More information"):
+        
+                            description = hike.get("description")
+                            if description:
+                                st.write(description)
+        
+                            season = hike.get("season")
+                            if season:
+                                st.write(f"**Season:** {season}")
+        
+                            schweizmobil_url = hike.get("schweizmobil_url")
+                            if schweizmobil_url:
+                                st.link_button(
+                                    "View on SchweizMobil",
+                                    schweizmobil_url
+                                )
         # Von Rocio ursprünlich: 
         # if len(results) > count_to_show:
         #     st.caption(f"Showing {count_to_show} of {len(results)} matching hikes.")
         # Von Kathi neu: Z. 273-305
                 # Navigation between result pages
-        prev_col, page_col, next_col = st.columns([1, 2, 1])
-
-        with prev_col:
-            if st.button(
-                "← Previous",
-                disabled=current_page == 1
-            ):
-                st.session_state["hike_page"] -= 1
-                st.rerun()
-
-        with page_col:
-            st.markdown(
-                f"<p style='text-align:center;'>"
-                f"Page {current_page} of {total_pages}"
-                f"</p>",
-                unsafe_allow_html=True
-            )
-
-        with next_col:
-            if st.button(
-                "Next →",
-                disabled=current_page == total_pages
-            ):
-                st.session_state["hike_page"] += 1
-                st.rerun()
-
-        st.caption(
-            f"Showing {start_index + 1}–"
-            f"{min(end_index, len(results))} "
-            f"of {len(results)} matching hikes."
-        )
+                prev_col, page_col, next_col = st.columns([1, 2, 1])
+        
+                with prev_col:
+                    if st.button(
+                        "← Previous",
+                        disabled=current_page == 1
+                    ):
+                        st.session_state["hike_page"] -= 1
+                        st.rerun()
+        
+                with page_col:
+                    st.markdown(
+                        f"<p style='text-align:center;'>"
+                        f"Page {current_page} of {total_pages}"
+                        f"</p>",
+                        unsafe_allow_html=True
+                    )
+        
+                with next_col:
+                    if st.button(
+                        "Next →",
+                        disabled=current_page == total_pages
+                    ):
+                        st.session_state["hike_page"] += 1
+                        st.rerun()
+        
+                st.caption(
+                    f"Showing {start_index + 1}–"
+                    f"{min(end_index, len(results))} "
+                    f"of {len(results)} matching hikes."
+                )
 else:
     st.info("Choose your preferences above and click ‘Find my hikes’ to see results.")
 

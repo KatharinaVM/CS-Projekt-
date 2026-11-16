@@ -4,12 +4,16 @@ import math
 import openrouteservice
 from dotenv import load_dotenv
 import requests
+import streamlit as st
 
 load_dotenv(".env.jonathan")
 
 api_key = os.getenv("ORS_API_KEY")
 
-client = openrouteservice.Client(key=api_key)
+client = openrouteservice.Client(
+    key=api_key,
+    base_url="https://api.heigit.org/openrouteservice"
+)
 
 # function to get out route
 
@@ -38,11 +42,29 @@ def get_car_route(start_coordinates, destination_coordinates):
 
 def get_coordinates(place):
 
-    result = client.pelias_search(
-        text = place,
-        country = "CH",
-        layers = ["locality"]
+    url = "https://api.heigit.org/pelias/v1/search"
+
+    parameters = {
+        "text": place,
+        "boundary.country": "CHE",
+        "layers": "locality",
+        "api_key": api_key
+    }
+
+    response = requests.get(
+        url,
+        params=parameters,
+        timeout=15
     )
+
+    response.raise_for_status()
+
+    result = response.json()
+
+    if not result.get("features"):
+        raise ValueError(
+            "No coordinates found for: " + place
+        )
 
     coordinates = result["features"][0]["geometry"]["coordinates"]
 
@@ -88,7 +110,7 @@ def get_straight_line_distance(start_coordinates, destination_coordinates):
 
 
 # Filter hikes based on driving time
-
+@st.cache_data(ttl=3600, show_spinner=False)
 def filter_hikes_by_car(hikes, start_location, max_driving_time):
 
     # Convert the user's starting location into coordinates
@@ -142,6 +164,8 @@ def filter_hikes_by_car(hikes, start_location, max_driving_time):
             )
 
         except openrouteservice.exceptions.ApiError as error:
+
+            print("Original ORS error:", error)
 
             if error.status == 403:
                 raise RuntimeError(

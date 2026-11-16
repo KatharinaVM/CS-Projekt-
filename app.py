@@ -6,6 +6,7 @@ import json
 import math
 from pathlib import Path
 from datetime import date, timedelta #neu für wetter filter 
+from weather_chart import show_temperature_chart
 
 import streamlit as st
 
@@ -215,21 +216,21 @@ if submitted:
         selected_endurance=selected_endurance,
     )
     #neu auto filter
-    if not start_location.strip():
-        st.error("Please enter a starting location.")
-        st.stop()
+    #if not start_location.strip():
+        #st.error("Please enter a starting location.")
+        #st.stop()
 
-    try:
-        with st.spinner("Calculating driving times..."):
-            filtered_hikes = filter_hikes_by_car(
-                hikes=filtered_hikes,
-                start_location=start_location.strip(),
-                max_driving_time=max_driving_time
-            )
+    #try:
+        #with st.spinner("Calculating driving times..."):
+            #filtered_hikes = filter_hikes_by_car(
+                #hikes=filtered_hikes,
+                #start_location=start_location.strip(),
+                #max_driving_time=max_driving_time
+            #)
 
-    except Exception as error:
-        st.error(f"Car routes could not be calculated: {error}")
-        st.stop()
+    #except Exception as error:
+        #st.error(f"Car routes could not be calculated: {error}")
+        #st.stop()
 
  # 2. Zusätzlich nach Wetter filtern
     try:
@@ -257,7 +258,7 @@ if "matching_hikes" in st.session_state:
     results = st.session_state["matching_hikes"]
     st.markdown('<h2 class="result-header">Your matching hikes</h2>', unsafe_allow_html=True)
     st.metric("Matching hikes", len(results))
-    st.caption("Results include hiking, car travel time and weather filters.") #neu auto filter
+    st.caption("Results include hiking and weather filters. Car routing is temporarily disabled.")  #neu auto filter
 
     if not results:
         st.info("No hikes match your selection. Try widening the filters.")
@@ -282,31 +283,55 @@ if "matching_hikes" in st.session_state:
         end_index = start_index + count_to_show
 
 
-        for hike in results[start_index:end_index]: # Klammer ersetzt von Kathi, ursprünglich :count_to_show
-            with st.container(border=True):
-                st.subheader(str(hike.get("name") or "Unnamed hike"))
+for hike in results[start_index:end_index]:
 
-                # Z.213-224 Kathi, Display the hiking image from hikes_data.json, 
-                images = hike.get("images") or []
+    with st.container(border=True):
 
-                if images:
-                    st.image(images[0], width=350)
+        st.subheader(str(hike.get("name") or "Unnamed hike"))
 
-                # Display starting point and destination
-                itinerary = hike.get("itinerary") or []
+        # Zwei Spalten: links Wanderung, rechts Diagramm
+        left_col, right_col = st.columns([1, 1], gap="large")
 
-                if itinerary:
-                    st.write("📍 " + " → ".join(itinerary))
+        with left_col:
 
-                metrics = st.columns(4)
-                metrics[0].write(f"🥾 {hike['distance_km']} km")
-                metrics[1].write(f"↗ {hike['ascent_m']} m")
-                metrics[2].write(f"↘ {hike['descent_m']} m")
-                metrics[3].write(f"⏱ {hike['duration_min'] / 60:.1f} h")
-                st.caption(
-                    f"Technical: {hike['technical_difficulty']}  ·  "
-                    f"Endurance: {hike['endurance_difficulty']}"
-                )
+            # Wanderbild
+            images = hike.get("images") or []
+
+            if images:
+                st.image(images[0], use_container_width=True)
+
+            # Wanderroute
+            itinerary = hike.get("itinerary") or []
+
+            if itinerary:
+                st.write("📍 " + " → ".join(itinerary))
+
+            # Wanderinformationen
+            metrics = st.columns(2)
+
+            metrics[0].write(f"🥾 {hike['distance_km']} km")
+            metrics[1].write(f"↗ {hike['ascent_m']} m")
+
+            metrics[0].write(f"↘ {hike['descent_m']} m")
+            metrics[1].write(
+                f"⏱ {hike['duration_min'] / 60:.1f} h"
+            )
+
+            st.caption(
+                f"Technical: {hike['technical_difficulty']} · "
+                f"Endurance: {hike['endurance_difficulty']}"
+            )
+
+        with right_col:
+
+            st.markdown("#### 🌡️ Hourly temperature forecast")
+
+            hourly_forecast = hike.get("hourly_temperature")
+
+            if hourly_forecast:
+                show_temperature_chart(hourly_forecast)
+            else:
+                st.info("No hourly temperature data available.")
                 #neu auto filter
                 if hike.get("driving_time_min") is not None:
                     st.write(f"🚗 Driving time: {hike['driving_time_min']} minutes")
@@ -394,3 +419,8 @@ if "matching_hikes" in st.session_state:
         )
 else:
     st.info("Choose your preferences above and click ‘Find my hikes’ to see results.")
+
+import pandas as pd
+import streamlit as st
+
+

@@ -391,7 +391,8 @@ if "matching_hikes" in st.session_state:
                         with prev_col:
                             if st.button(
                                 "← Previous",
-                                disabled=current_page == 1
+                                disabled=current_page == 1,
+                                key="previous_page"
                             ):
                                 st.session_state["hike_page"] -= 1
                                 st.rerun()
@@ -407,7 +408,8 @@ if "matching_hikes" in st.session_state:
                         with next_col:
                             if st.button(
                                 "Next →",
-                                disabled=current_page == total_pages
+                                disabled=current_page == total_pages,
+                                key="next_page"
                             ):
                                 st.session_state["hike_page"] += 1
                                 st.rerun()

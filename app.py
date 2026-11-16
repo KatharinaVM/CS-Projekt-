@@ -385,40 +385,41 @@ if "matching_hikes" in st.session_state:
         # if len(results) > count_to_show:
         #     st.caption(f"Showing {count_to_show} of {len(results)} matching hikes.")
         # Von Kathi neu: Z. 273-305
-                        # Navigation between result pages
-                        prev_col, page_col, next_col = st.columns([1, 2, 1])
+        
+   # Navigation between result pages
+   prev_col, page_col, next_col = st.columns([1, 2, 1])
+            
+   with prev_col:
+        if st.button(
+            "← Previous",
+            disabled=current_page == 1,
+            key="previous_page"
+        ):
+            st.session_state["hike_page"] -= 1
+            st.rerun()
+
+    with page_col:
+        st.markdown(
+            f"<p style='text-align:center;'>"
+            f"Page {current_page} of {total_pages}"
+            f"</p>",
+            unsafe_allow_html=True
+        )
+
+    with next_col:
+        if st.button(
+            "Next →",
+            disabled=current_page == total_pages,
+            key="next_page"
+        ):
+            st.session_state["hike_page"] += 1
+            st.rerun()
                 
-                        with prev_col:
-                            if st.button(
-                                "← Previous",
-                                disabled=current_page == 1,
-                                key="previous_page"
-                            ):
-                                st.session_state["hike_page"] -= 1
-                                st.rerun()
-                
-                        with page_col:
-                            st.markdown(
-                                f"<p style='text-align:center;'>"
-                                f"Page {current_page} of {total_pages}"
-                                f"</p>",
-                                unsafe_allow_html=True
-                            )
-                
-                        with next_col:
-                            if st.button(
-                                "Next →",
-                                disabled=current_page == total_pages,
-                                key="next_page"
-                            ):
-                                st.session_state["hike_page"] += 1
-                                st.rerun()
-                
-                        st.caption(
-                            f"Showing {start_index + 1}–"
-                            f"{min(end_index, len(results))} "
-                            f"of {len(results)} matching hikes."
-                        )
+    st.caption(
+        f"Showing {start_index + 1}–"
+        f"{min(end_index, len(results))} "
+        f"of {len(results)} matching hikes."
+    )
 else:
     st.info("Choose your preferences above and click ‘Find my hikes’ to see results.")
 

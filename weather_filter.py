@@ -57,6 +57,7 @@ def get_weather_forecasts_batch(hikes):
             "temperature_2m_max",
             "temperature_2m_min"
         ],
+        "hourly": ["temperature_2m"],
         "forecast_days": 7,
         "timezone": "Europe/Zurich"
     }

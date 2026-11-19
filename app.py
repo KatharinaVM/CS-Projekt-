@@ -325,10 +325,10 @@ if "matching_hikes" in st.session_state:
         
                     st.markdown("#### 🌡️ Hourly temperature forecast")
         
-                    hourly_forecast = hike.get("hourly_temperature")
+                    forecast = hike.get("hourly_temperature")
         
-                    if hourly_forecast:
-                        show_temperature_chart(hourly_forecast)
+                    if forecast:
+                        show_temperature_chart(forecast)
                     else:
                         st.info("No hourly temperature data available.")
                         #neu auto filter
